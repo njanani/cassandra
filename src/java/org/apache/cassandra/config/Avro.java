@@ -136,6 +136,7 @@ public class Avro
         //  Isn't AVRO supposed to handle stuff like this?
         if (cf.min_compaction_threshold != null) { newCFMD.minCompactionThreshold(cf.min_compaction_threshold); }
         if (cf.max_compaction_threshold != null) { newCFMD.maxCompactionThreshold(cf.max_compaction_threshold); }
+        if (cf.privacy != null) { newCFMD.privacy(cf.privacy); }
         if (cf.key_alias != null) { newCFMD.keyAlias(cf.key_alias); }
         if (cf.column_aliases != null)
             newCFMD.columnAliases(new ArrayList<ByteBuffer>(cf.column_aliases)); // fix avro stupidity
@@ -188,7 +189,8 @@ public class Avro
                       .columnMetadata(column_metadata)
                       .compressionParameters(cp)
                       .bloomFilterFpChance(cf.bloom_filter_fp_chance)
-                      .caching(caching);
+                      .caching(caching)
+                      .privacy(cf.privacy);
     }
 
     @Deprecated

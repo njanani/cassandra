@@ -66,6 +66,7 @@ public final class CFMetaData
     public final static int DEFAULT_GC_GRACE_SECONDS = 864000;
     public final static int DEFAULT_MIN_COMPACTION_THRESHOLD = 4;
     public final static int DEFAULT_MAX_COMPACTION_THRESHOLD = 32;
+    public final static int DEFAULT_PRIVACY = 2;
     public final static String DEFAULT_COMPACTION_STRATEGY_CLASS = "SizeTieredCompactionStrategy";
     public final static ByteBuffer DEFAULT_KEY_NAME = ByteBufferUtil.bytes("KEY");
     public final static Caching DEFAULT_CACHING_STRATEGY = Caching.KEYS_ONLY;
@@ -137,7 +138,8 @@ public final class CFMetaData
                                                  ColumnDefinition.ascii("compression_parameters", 1),
                                                  ColumnDefinition.utf8("value_alias", 1),
                                                  ColumnDefinition.utf8("column_aliases", 1),
-                                                 ColumnDefinition.ascii("compaction_strategy_options", 1));
+                                                 ColumnDefinition.ascii("compaction_strategy_options", 1),
+                                                 ColumnDefinition.int32("privacy", 1));
 
         SchemaColumnsCf = newSchemaMetadata(SystemTable.SCHEMA_COLUMNS_CF,
                                             10,
@@ -180,6 +182,7 @@ public final class CFMetaData
     public final ColumnFamilyType cfType;             // standard, super
     public AbstractType<?> comparator;          // bytes, long, timeuuid, utf8, etc.
     public AbstractType<?> subcolumnComparator; // like comparator, for supercolumns
+   
 
     //OPTIONAL
     private String comment;                           // default none, for humans only
@@ -196,6 +199,7 @@ public final class CFMetaData
     private ByteBuffer valueAlias;                    // default NULL
     private Double bloomFilterFpChance;               // default NULL
     private Caching caching;                          // default KEYS_ONLY (possible: all, key_only, row_only, none)
+    private int privacy;                           // default 2 (possible: 1(private) ,2(public)) 
 
     Map<ByteBuffer, ColumnDefinition> column_metadata;
     public Class<? extends AbstractCompactionStrategy> compactionStrategyClass;
@@ -217,6 +221,7 @@ public final class CFMetaData
     public CFMetaData keyValidator(AbstractType<?> prop) {keyValidator = prop; updateCfDef(); return this;}
     public CFMetaData minCompactionThreshold(int prop) {minCompactionThreshold = prop; return this;}
     public CFMetaData maxCompactionThreshold(int prop) {maxCompactionThreshold = prop; return this;}
+    public CFMetaData privacy(int prop) {privacy = prop; return this;}
     public CFMetaData keyAlias(ByteBuffer prop) {keyAlias = prop; updateCfDef(); return this;}
     public CFMetaData keyAlias(String alias) { return keyAlias(ByteBufferUtil.bytes(alias)); }
     public CFMetaData columnAliases(List<ByteBuffer> prop) {columnAliases = prop; updateCfDef(); return this;}
@@ -255,7 +260,7 @@ public final class CFMetaData
         cfId = id;
         caching = DEFAULT_CACHING_STRATEGY;
         bloomFilterFpChance = DEFAULT_BF_FP_CHANCE;
-
+      
         this.init();
     }
 
@@ -278,6 +283,7 @@ public final class CFMetaData
         gcGraceSeconds               = DEFAULT_GC_GRACE_SECONDS;
         minCompactionThreshold       = DEFAULT_MIN_COMPACTION_THRESHOLD;
         maxCompactionThreshold       = DEFAULT_MAX_COMPACTION_THRESHOLD;
+        privacy      				 = DEFAULT_PRIVACY;
 
         // Defaults strange or simple enough to not need a DEFAULT_T for
         defaultValidator = BytesType.instance;
@@ -338,6 +344,7 @@ public final class CFMetaData
         gcGraceSeconds(parent.gcGraceSeconds);
         minCompactionThreshold(parent.minCompactionThreshold);
         maxCompactionThreshold(parent.maxCompactionThreshold);
+        privacy(parent.privacy);
         compactionStrategyClass(parent.compactionStrategyClass);
         compactionStrategyOptions(parent.compactionStrategyOptions);
         compressionParameters(parent.compressionParameters);
@@ -441,6 +448,11 @@ public final class CFMetaData
     {
         return maxCompactionThreshold;
     }
+    
+    public Integer getPrivacy()
+    {
+        return privacy;
+    }
 
     public ByteBuffer getKeyName()
     {
@@ -524,6 +536,7 @@ public final class CFMetaData
             .append(compressionParameters, rhs.compressionParameters)
             .append(bloomFilterFpChance, rhs.bloomFilterFpChance)
             .append(caching, rhs.caching)
+            .append(privacy, rhs.privacy)
             .isEquals();
     }
 
@@ -554,6 +567,7 @@ public final class CFMetaData
             .append(compressionParameters)
             .append(bloomFilterFpChance)
             .append(caching)
+            .append(privacy)
             .toHashCode();
     }
 
@@ -580,6 +594,8 @@ public final class CFMetaData
             cf_def.setMin_compaction_threshold(CFMetaData.DEFAULT_MIN_COMPACTION_THRESHOLD);
         if (!cf_def.isSetMax_compaction_threshold())
             cf_def.setMax_compaction_threshold(CFMetaData.DEFAULT_MAX_COMPACTION_THRESHOLD);
+        if (!cf_def.isSetPrivacy())
+            cf_def.setPrivacy(CFMetaData.DEFAULT_PRIVACY);
         if (null == cf_def.compaction_strategy)
             cf_def.compaction_strategy = DEFAULT_COMPACTION_STRATEGY_CLASS;
         if (null == cf_def.compaction_strategy_options)
@@ -615,6 +631,7 @@ public final class CFMetaData
         if (cf_def.isSetGc_grace_seconds()) { newCFMD.gcGraceSeconds(cf_def.gc_grace_seconds); }
         if (cf_def.isSetMin_compaction_threshold()) { newCFMD.minCompactionThreshold(cf_def.min_compaction_threshold); }
         if (cf_def.isSetMax_compaction_threshold()) { newCFMD.maxCompactionThreshold(cf_def.max_compaction_threshold); }
+        if (cf_def.isSetPrivacy()) { newCFMD.privacy(cf_def.privacy); }
         if (cf_def.isSetKey_alias()) { newCFMD.keyAlias(cf_def.key_alias); }
         if (cf_def.isSetKey_validation_class()) { newCFMD.keyValidator(TypeParser.parse(cf_def.key_validation_class)); }
         if (cf_def.isSetCompaction_strategy())
@@ -710,6 +727,7 @@ public final class CFMetaData
         keyValidator = cfm.keyValidator;
         minCompactionThreshold = cfm.minCompactionThreshold;
         maxCompactionThreshold = cfm.maxCompactionThreshold;
+        privacy = cfm.privacy;
         keyAlias = cfm.keyAlias;
 
         // We don't want updates coming from thrift to erase columnAliases/valuAlias, which would be wrong, but those are not exposed throught thrift. So
@@ -803,6 +821,7 @@ public final class CFMetaData
         def.setKey_validation_class(keyValidator.toString());
         def.setMin_compaction_threshold(minCompactionThreshold);
         def.setMax_compaction_threshold(maxCompactionThreshold);
+        def.setPrivacy(privacy);
         def.setKey_alias(keyAlias);
         List<org.apache.cassandra.thrift.ColumnDef> column_meta = new ArrayList<org.apache.cassandra.thrift.ColumnDef>(column_metadata.size());
         for (ColumnDefinition cd : column_metadata.values())
@@ -1078,6 +1097,7 @@ public final class CFMetaData
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "key_validator"));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "min_compaction_threshold"));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "max_compaction_threshold"));
+        cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "privacy"));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "key_alias"));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "bloom_filter_fp_chance"));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "caching"));
@@ -1123,6 +1143,7 @@ public final class CFMetaData
         cf.addColumn(Column.create(keyValidator.toString(), timestamp, cfName, "key_validator"));
         cf.addColumn(Column.create(minCompactionThreshold, timestamp, cfName, "min_compaction_threshold"));
         cf.addColumn(Column.create(maxCompactionThreshold, timestamp, cfName, "max_compaction_threshold"));
+        cf.addColumn(Column.create(privacy, timestamp, cfName, "privacy"));
         cf.addColumn(keyAlias == null ? DeletedColumn.create(ldt, timestamp, cfName, "key_alias")
                                       : Column.create(keyAlias, timestamp, cfName, "key_alias"));
         cf.addColumn(bloomFilterFpChance == null ? DeletedColumn.create(ldt, timestamp, cfName, "bloomFilterFpChance")
@@ -1141,6 +1162,7 @@ public final class CFMetaData
     {
         try
         {
+        	System.out.println("result : " + result);
             CFMetaData cfm = new CFMetaData(result.getString("keyspace"),
                                             result.getString("columnfamily"),
                                             ColumnFamilyType.valueOf(result.getString("type")),
@@ -1155,6 +1177,7 @@ public final class CFMetaData
             cfm.keyValidator(TypeParser.parse(result.getString("key_validator")));
             cfm.minCompactionThreshold(result.getInt("min_compaction_threshold"));
             cfm.maxCompactionThreshold(result.getInt("max_compaction_threshold"));
+            cfm.privacy(result.getInt("privacy"));
             if (result.has("comment"))
                 cfm.comment(result.getString("comment"));
             if (result.has("key_alias"))
@@ -1312,6 +1335,7 @@ public final class CFMetaData
             .append("compressionOptions", compressionParameters.asThriftOptions())
             .append("bloomFilterFpChance", bloomFilterFpChance)
             .append("caching", caching)
+            .append("privacy", privacy)
             .toString();
     }
 }
