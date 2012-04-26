@@ -368,6 +368,15 @@
           <dependency groupId="org.apache.cassandra" artifactId="cassandra-thrift" version="${version}" />
           <dependency groupId="com.yammer.metrics" artifactId="metrics-core" version="2.0.3" />
           <dependency groupId="edu.stanford.ppl" artifactId="snaptree" version="0.1" />
+			 <dependency groupId="Glacier2" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="Ice" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceBox" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceGrid" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceInternal" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceSSL" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceStorm" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceUtil" artifactId="Ice" version="2.1.2" />
+          <dependency groupId="IceUtilIntenal" artifactId="Ice" version="2.1.2" />
         </dependencyManagement>
         <developer id="alakshman" name="Avinash Lakshman"/>
         <developer id="antelder" name="Anthony Elder"/>
@@ -467,6 +476,15 @@
         
         <!-- don't need jamm unless running a server in which case it needs to be a -javagent to be used anyway -->
         <dependency groupId="com.github.stephenc" artifactId="jamm"/>
+		  <dependency groupId="Glacier2" artifactId="Ice"/>
+        <dependency groupId="Ice" artifactId="Ice"/>
+        <dependency groupId="IceBox" artifactId="Ice"/>
+        <dependency groupId="IceGrid" artifactId="Ice"/>
+        <dependency groupId="IceInternal" artifactId="Ice"/>
+        <dependency groupId="IceSSL" artifactId="Ice"/>
+        <dependency groupId="IceStorm" artifactId="Ice"/>
+        <dependency groupId="IceUtil" artifactId="Ice"/>
+        <dependency groupId="IceUtilIntenal" artifactId="Ice"/>
       </artifact:pom>
       <artifact:pom id="thrift-pom"
                     artifactId="cassandra-thrift"
