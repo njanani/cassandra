@@ -39,6 +39,8 @@ import org.apache.cassandra.io.util.*;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.*;
 import org.apache.cassandra.flecs.*;
+import org.apache.cassandra.thrift.CfDef;
+import org.apache.cassandra.thrift.KsDef;
 
 public class SSTableWriter extends SSTable
 {
@@ -345,12 +347,23 @@ public class SSTableWriter extends SSTable
         return newdesc;
     }
 
-	 public static byte[] readFileToByteArray(String fname)throws IOException
+	public static byte[] readFileToByteArray(String fname)throws IOException
     {
     	RandomAccessFile f = new RandomAccessFile(fname, "r");
         byte[] b = new byte[(int)f.length()];
         f.read(b);
         return b;
+    }
+
+    public static CfDef getCfDef(KsDef keyspace, String columnFamilyName)
+    {
+        for (CfDef cfDef : keyspace.cf_defs)
+        {
+            if (cfDef.name.equals(columnFamilyName))
+                return cfDef;
+        }
+
+        return null;
     }
 
     public static void rename(Descriptor tmpdesc, Descriptor newdesc, Set<Component> components)
@@ -369,9 +382,10 @@ public class SSTableWriter extends SSTable
 	            FleCSClient fcsclient = new FleCSClient();
 	            fcsclient.init();
 	            byte[] filecontent = readFileToByteArray(newdesc.filenameFor(Component.DATA));
-	           // System.out.println(newdesc.filenameFor(Component.DATA));
-	            
-	            int success = fcsclient.Put("rep-no-const", newdesc.filenameFor(Component.DATA),filecontent);
+	            KsDef newksDef = new KsDef();
+	            CfDef newcfDef =  getCfDef(newksDef,newdesc.cfname);
+	            System.out.println("Data privacy : " + newcfDef.getPrivacy());
+	            int success = fcsclient.Put(flecsContainers.get(newcfDef.getPrivacy()), newdesc.filenameFor(Component.DATA),filecontent);
 	            System.out.println("Put data file to flecs: " + success);
 	            fcsclient.cleanup();
             }

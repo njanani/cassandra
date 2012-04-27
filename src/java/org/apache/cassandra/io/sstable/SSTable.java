@@ -77,6 +77,7 @@ public abstract class SSTable
 
     public final Descriptor descriptor;
     protected final Set<Component> components;
+    public static final Map<Integer,String> flecsContainers = new HashMap<Integer,String>(2);
     public final CFMetaData metadata;
     public final IPartitioner partitioner;
     public final boolean compression;
@@ -87,7 +88,7 @@ public abstract class SSTable
     protected SSTable(Descriptor descriptor, CFMetaData metadata, IPartitioner partitioner)
     {
         this(descriptor, new HashSet<Component>(), metadata, partitioner);
-    }
+    } 
 
     protected SSTable(Descriptor descriptor, Set<Component> components, CFMetaData metadata, IPartitioner partitioner)
     {
@@ -106,6 +107,8 @@ public abstract class SSTable
         this.components = Collections.unmodifiableSet(dataComponents);
         this.metadata = metadata;
         this.partitioner = partitioner;
+        flecsContainers.put(1,"rep-partial");
+        flecsContainers.put(2,"rep-strong-const");        
     }
 
     public static final Comparator<SSTableReader> sstableComparator = new Comparator<SSTableReader>()
