@@ -67,6 +67,7 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   private static final org.apache.thrift.protocol.TField BLOOM_FILTER_FP_CHANCE_FIELD_DESC = new org.apache.thrift.protocol.TField("bloom_filter_fp_chance", org.apache.thrift.protocol.TType.DOUBLE, (short)33);
   private static final org.apache.thrift.protocol.TField CACHING_FIELD_DESC = new org.apache.thrift.protocol.TField("caching", org.apache.thrift.protocol.TType.STRING, (short)34);
   private static final org.apache.thrift.protocol.TField DCLOCAL_READ_REPAIR_CHANCE_FIELD_DESC = new org.apache.thrift.protocol.TField("dclocal_read_repair_chance", org.apache.thrift.protocol.TType.DOUBLE, (short)37);
+  private static final org.apache.thrift.protocol.TField PRIVACY_FIELD_DESC = new org.apache.thrift.protocol.TField("privacy", org.apache.thrift.protocol.TType.I32, (short)38);
   private static final org.apache.thrift.protocol.TField ROW_CACHE_SIZE_FIELD_DESC = new org.apache.thrift.protocol.TField("row_cache_size", org.apache.thrift.protocol.TType.DOUBLE, (short)9);
   private static final org.apache.thrift.protocol.TField KEY_CACHE_SIZE_FIELD_DESC = new org.apache.thrift.protocol.TField("key_cache_size", org.apache.thrift.protocol.TType.DOUBLE, (short)11);
   private static final org.apache.thrift.protocol.TField ROW_CACHE_SAVE_PERIOD_IN_SECONDS_FIELD_DESC = new org.apache.thrift.protocol.TField("row_cache_save_period_in_seconds", org.apache.thrift.protocol.TType.I32, (short)19);
@@ -100,6 +101,7 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   public double bloom_filter_fp_chance; // required
   public String caching; // required
   public double dclocal_read_repair_chance; // required
+  public int privacy; // required
   /**
    * @deprecated
    */
@@ -165,6 +167,7 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     BLOOM_FILTER_FP_CHANCE((short)33, "bloom_filter_fp_chance"),
     CACHING((short)34, "caching"),
     DCLOCAL_READ_REPAIR_CHANCE((short)37, "dclocal_read_repair_chance"),
+    PRIVACY((short)38, "privacy"),
     /**
      * @deprecated
      */
@@ -263,6 +266,8 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
           return CACHING;
         case 37: // DCLOCAL_READ_REPAIR_CHANCE
           return DCLOCAL_READ_REPAIR_CHANCE;
+        case 38: // PRIVACY
+          return PRIVACY;
         case 9: // ROW_CACHE_SIZE
           return ROW_CACHE_SIZE;
         case 11: // KEY_CACHE_SIZE
@@ -331,16 +336,17 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   private static final int __REPLICATE_ON_WRITE_ISSET_ID = 5;
   private static final int __BLOOM_FILTER_FP_CHANCE_ISSET_ID = 6;
   private static final int __DCLOCAL_READ_REPAIR_CHANCE_ISSET_ID = 7;
-  private static final int __ROW_CACHE_SIZE_ISSET_ID = 8;
-  private static final int __KEY_CACHE_SIZE_ISSET_ID = 9;
-  private static final int __ROW_CACHE_SAVE_PERIOD_IN_SECONDS_ISSET_ID = 10;
-  private static final int __KEY_CACHE_SAVE_PERIOD_IN_SECONDS_ISSET_ID = 11;
-  private static final int __MEMTABLE_FLUSH_AFTER_MINS_ISSET_ID = 12;
-  private static final int __MEMTABLE_THROUGHPUT_IN_MB_ISSET_ID = 13;
-  private static final int __MEMTABLE_OPERATIONS_IN_MILLIONS_ISSET_ID = 14;
-  private static final int __MERGE_SHARDS_CHANCE_ISSET_ID = 15;
-  private static final int __ROW_CACHE_KEYS_TO_SAVE_ISSET_ID = 16;
-  private BitSet __isset_bit_vector = new BitSet(17);
+  private static final int __PRIVACY_ISSET_ID = 8;
+  private static final int __ROW_CACHE_SIZE_ISSET_ID = 9;
+  private static final int __KEY_CACHE_SIZE_ISSET_ID = 10;
+  private static final int __ROW_CACHE_SAVE_PERIOD_IN_SECONDS_ISSET_ID = 11;
+  private static final int __KEY_CACHE_SAVE_PERIOD_IN_SECONDS_ISSET_ID = 12;
+  private static final int __MEMTABLE_FLUSH_AFTER_MINS_ISSET_ID = 13;
+  private static final int __MEMTABLE_THROUGHPUT_IN_MB_ISSET_ID = 14;
+  private static final int __MEMTABLE_OPERATIONS_IN_MILLIONS_ISSET_ID = 15;
+  private static final int __MERGE_SHARDS_CHANCE_ISSET_ID = 16;
+  private static final int __ROW_CACHE_KEYS_TO_SAVE_ISSET_ID = 17;
+  private BitSet __isset_bit_vector = new BitSet(18);
 
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
@@ -394,6 +400,8 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.DCLOCAL_READ_REPAIR_CHANCE, new org.apache.thrift.meta_data.FieldMetaData("dclocal_read_repair_chance", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
+    tmpMap.put(_Fields.PRIVACY, new org.apache.thrift.meta_data.FieldMetaData("privacy", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.ROW_CACHE_SIZE, new org.apache.thrift.meta_data.FieldMetaData("row_cache_size", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
     tmpMap.put(_Fields.KEY_CACHE_SIZE, new org.apache.thrift.meta_data.FieldMetaData("key_cache_size", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -426,6 +434,8 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     this.caching = "keys_only";
 
     this.dclocal_read_repair_chance = 0;
+
+    this.privacy = 2;
 
   }
 
@@ -523,6 +533,7 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       this.caching = other.caching;
     }
     this.dclocal_read_repair_chance = other.dclocal_read_repair_chance;
+    this.privacy = other.privacy;
     this.row_cache_size = other.row_cache_size;
     this.key_cache_size = other.key_cache_size;
     this.row_cache_save_period_in_seconds = other.row_cache_save_period_in_seconds;
@@ -575,6 +586,8 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     this.caching = "keys_only";
 
     this.dclocal_read_repair_chance = 0;
+
+    this.privacy = 2;
 
     setRow_cache_sizeIsSet(false);
     this.row_cache_size = 0.0;
@@ -1164,6 +1177,29 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     __isset_bit_vector.set(__DCLOCAL_READ_REPAIR_CHANCE_ISSET_ID, value);
   }
 
+  public int getPrivacy() {
+    return this.privacy;
+  }
+
+  public CfDef setPrivacy(int privacy) {
+    this.privacy = privacy;
+    setPrivacyIsSet(true);
+    return this;
+  }
+
+  public void unsetPrivacy() {
+    __isset_bit_vector.clear(__PRIVACY_ISSET_ID);
+  }
+
+  /** Returns true if field privacy is set (has been assigned a value) and false otherwise */
+  public boolean isSetPrivacy() {
+    return __isset_bit_vector.get(__PRIVACY_ISSET_ID);
+  }
+
+  public void setPrivacyIsSet(boolean value) {
+    __isset_bit_vector.set(__PRIVACY_ISSET_ID, value);
+  }
+
   /**
    * @deprecated
    */
@@ -1633,6 +1669,14 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       }
       break;
 
+    case PRIVACY:
+      if (value == null) {
+        unsetPrivacy();
+      } else {
+        setPrivacy((Integer)value);
+      }
+      break;
+
     case ROW_CACHE_SIZE:
       if (value == null) {
         unsetRow_cache_size();
@@ -1784,6 +1828,9 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     case DCLOCAL_READ_REPAIR_CHANCE:
       return Double.valueOf(getDclocal_read_repair_chance());
 
+    case PRIVACY:
+      return Integer.valueOf(getPrivacy());
+
     case ROW_CACHE_SIZE:
       return Double.valueOf(getRow_cache_size());
 
@@ -1869,6 +1916,8 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       return isSetCaching();
     case DCLOCAL_READ_REPAIR_CHANCE:
       return isSetDclocal_read_repair_chance();
+    case PRIVACY:
+      return isSetPrivacy();
     case ROW_CACHE_SIZE:
       return isSetRow_cache_size();
     case KEY_CACHE_SIZE:
@@ -2104,6 +2153,15 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
         return false;
     }
 
+    boolean this_present_privacy = true && this.isSetPrivacy();
+    boolean that_present_privacy = true && that.isSetPrivacy();
+    if (this_present_privacy || that_present_privacy) {
+      if (!(this_present_privacy && that_present_privacy))
+        return false;
+      if (this.privacy != that.privacy)
+        return false;
+    }
+
     boolean this_present_row_cache_size = true && this.isSetRow_cache_size();
     boolean that_present_row_cache_size = true && that.isSetRow_cache_size();
     if (this_present_row_cache_size || that_present_row_cache_size) {
@@ -2310,6 +2368,11 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     builder.append(present_dclocal_read_repair_chance);
     if (present_dclocal_read_repair_chance)
       builder.append(dclocal_read_repair_chance);
+
+    boolean present_privacy = true && (isSetPrivacy());
+    builder.append(present_privacy);
+    if (present_privacy)
+      builder.append(privacy);
 
     boolean present_row_cache_size = true && (isSetRow_cache_size());
     builder.append(present_row_cache_size);
@@ -2588,6 +2651,16 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     }
     if (isSetDclocal_read_repair_chance()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dclocal_read_repair_chance, typedOther.dclocal_read_repair_chance);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetPrivacy()).compareTo(typedOther.isSetPrivacy());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetPrivacy()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.privacy, typedOther.privacy);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -2906,6 +2979,14 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
           }
           break;
+        case 38: // PRIVACY
+          if (field.type == org.apache.thrift.protocol.TType.I32) {
+            this.privacy = iprot.readI32();
+            setPrivacyIsSet(true);
+          } else { 
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
         case 9: // ROW_CACHE_SIZE
           if (field.type == org.apache.thrift.protocol.TType.DOUBLE) {
             this.row_cache_size = iprot.readDouble();
@@ -3209,6 +3290,11 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       oprot.writeDouble(this.dclocal_read_repair_chance);
       oprot.writeFieldEnd();
     }
+    if (isSetPrivacy()) {
+      oprot.writeFieldBegin(PRIVACY_FIELD_DESC);
+      oprot.writeI32(this.privacy);
+      oprot.writeFieldEnd();
+    }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -3399,6 +3485,12 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       if (!first) sb.append(", ");
       sb.append("dclocal_read_repair_chance:");
       sb.append(this.dclocal_read_repair_chance);
+      first = false;
+    }
+    if (isSetPrivacy()) {
+      if (!first) sb.append(", ");
+      sb.append("privacy:");
+      sb.append(this.privacy);
       first = false;
     }
     if (isSetRow_cache_size()) {
