@@ -161,7 +161,8 @@ JVM_OPTS="$JVM_OPTS -XX:SurvivorRatio=8"
 JVM_OPTS="$JVM_OPTS -XX:MaxTenuringThreshold=1"
 JVM_OPTS="$JVM_OPTS -XX:CMSInitiatingOccupancyFraction=75"
 JVM_OPTS="$JVM_OPTS -XX:+UseCMSInitiatingOccupancyOnly"
-
+#Added by Janani Narayanan for Debugging with Eclipse
+#JVM_OPTS="$JVM_OPTS -Xrunjdwp:transport=dt_socket,server=y,address=8888,suspend=n"
 # GC logging options -- uncomment to enable
 # JVM_OPTS="$JVM_OPTS -XX:+PrintGCDetails"
 # JVM_OPTS="$JVM_OPTS -XX:+PrintGCDateStamps"
@@ -173,7 +174,7 @@ JVM_OPTS="$JVM_OPTS -XX:+UseCMSInitiatingOccupancyOnly"
 # JVM_OPTS="$JVM_OPTS -Xloggc:/var/log/cassandra/gc-`date +%s`.log"
 
 # uncomment to have Cassandra JVM listen for remote debuggers/profilers on port 1414
-# JVM_OPTS="$JVM_OPTS -Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=1414"
+JVM_OPTS="$JVM_OPTS -Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=1414"
 
 # Prefer binding to IPv4 network intefaces (when net.ipv6.bindv6only=1). See 
 # http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342561 (short version:
@@ -192,4 +193,3 @@ JVM_OPTS="$JVM_OPTS -Djava.net.preferIPv4Stack=true"
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT" 
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=false" 
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=false" 
-JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS"

@@ -142,7 +142,8 @@ public class CliClient
         COMPACTION_STRATEGY_OPTIONS,
         COMPRESSION_OPTIONS,
         BLOOM_FILTER_FP_CHANCE,
-        CACHING
+        CACHING,
+		  PRIVACY
     }
 
     private static final String DEFAULT_PLACEMENT_STRATEGY = "org.apache.cassandra.locator.NetworkTopologyStrategy";
@@ -168,14 +169,20 @@ public class CliClient
 
     private CliUserHelp getHelp()
     {
+		try {
         if (help == null)
             help = loadHelp();
         return help;
+		}
+		catch(Exception e){
+		}
+		return null;
     }
 
     private CliUserHelp loadHelp()
     {
-        final InputStream is = CliClient.class.getClassLoader().getResourceAsStream("org/apache/cassandra/cli/CliHelp.yaml");
+//        final InputStream is = CliClient.class.getClassLoader().getResourceAsStream("org/apache/cassandra/cli/CliHelp.yaml");
+		  final InputStream is = new FileInputStream("/usr/local/cassandra/src/resources/org/apache/cassandra/cli/CliHelp.yaml");
         assert is != null;
 
         try
@@ -1267,6 +1274,9 @@ public class CliClient
             case CACHING:
                 cfDef.setCaching(CliUtils.unescapeSQLString(mValue));
                 break;
+				case PRIVACY:
+            	 cfDef.setPrivacy(Integer.parseInt(mValue));
+            	 break;
             default:
                 //must match one of the above or we'd throw an exception at the valueOf statement above.
                 assert(false);
@@ -1721,6 +1731,7 @@ public class CliClient
         writeAttr(output, false, "gc_grace", cfDef.gc_grace_seconds);
         writeAttr(output, false, "min_compaction_threshold", cfDef.min_compaction_threshold);
         writeAttr(output, false, "max_compaction_threshold", cfDef.max_compaction_threshold);
+		  writeAttr(output, false, "Data privacy", cfDef.privacy);
         writeAttr(output, false, "replicate_on_write", cfDef.replicate_on_write);
         writeAttr(output, false, "compaction_strategy", cfDef.compaction_strategy);
         writeAttr(output, false, "caching", cfDef.caching);
@@ -2071,6 +2082,7 @@ public class CliClient
         sessionState.out.printf("      Columns sorted by: %s%s%n", cf_def.comparator_type, cf_def.column_type.equals("Super") ? "/" + cf_def.subcomparator_type : "");
         sessionState.out.printf("      GC grace seconds: %s%n", cf_def.gc_grace_seconds);
         sessionState.out.printf("      Compaction min/max thresholds: %s/%s%n", cf_def.min_compaction_threshold, cf_def.max_compaction_threshold);
+		  sessionState.out.printf("      Data Privacy: %s%n", cf_def.privacy);
         sessionState.out.printf("      Read repair chance: %s%n", cf_def.read_repair_chance);
         sessionState.out.printf("      DC Local Read repair chance: %s%n", cf_def.dclocal_read_repair_chance);
         sessionState.out.printf("      Replicate on write: %s%n", cf_def.replicate_on_write);

@@ -101,6 +101,10 @@ else
     NUMACTL=""
 fi
 
+export CLASSPATH=$CLASSPATH:/usr/share/java/Ice.jar:/usr/local/cassandra-trunk/slice/classes
+echo "classpth"
+echo $CLASSPATH
+echo "end classpth"
 if [ -z "$CASSANDRA_CONF" -o -z "$CLASSPATH" ]; then
     echo "You must set the CASSANDRA_CONF and CLASSPATH vars" >&2
     exit 1
