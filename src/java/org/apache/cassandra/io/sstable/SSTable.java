@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.Schema;
 import org.apache.cassandra.db.RowIndexEntry;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.flecs.FleCSClient;
@@ -151,7 +152,8 @@ public abstract class SSTable
     	    	//Delete request to Flecs - only the data file is added to Flecs           
     	        FleCSClient fcsclient = new FleCSClient();
     	        fcsclient.init();
-    	        int status = fcsclient.Delete(SSTable.flecsContainers.get(CassandraServer.cf_privacy.get(desc.cfname)), desc.filenameFor(Component.DATA));
+    	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
+    	        int status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), desc.filenameFor(Component.DATA));
     	        fcsclient.cleanup();
     	        if (status == 1)
     	        {

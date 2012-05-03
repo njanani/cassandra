@@ -22,10 +22,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.cassandra.config.ConfigurationException;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.io.sstable.Component;
 import org.apache.cassandra.io.sstable.Descriptor;
+import org.apache.cassandra.io.sstable.SSTable;
+import org.apache.cassandra.thrift.CassandraServer;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.BigLongArray;
+import org.apache.cassandra.config.Schema;
+import org.apache.cassandra.config.CFMetaData;
 
 /**
  * Holds metadata about compressed file
@@ -52,10 +57,25 @@ public class CompressionMetadata
     public static CompressionMetadata create(String dataFilePath)
     {
         Descriptor desc = Descriptor.fromFilename(dataFilePath);
+        long size;
 
         try
         {
-            return new CompressionMetadata(desc.filenameFor(Component.COMPRESSION_INFO), new File(dataFilePath).length());
+        	if(!dataFilePath.contains("/system/")) {
+    	        //Get request to Flecs - only the data file is added to Flecs           
+    	        FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();
+    	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
+    	        size = fcsclient.Size(SSTable.flecsContainers.get(cfm.getPrivacy()),dataFilePath);
+    	        fcsclient.cleanup();
+    	        if(size == -1)
+    	        	throw new IOException();    	        	
+            }
+        	else 
+        	{
+        		size = new File(dataFilePath).length();        		
+        	}
+        	return new CompressionMetadata(desc.filenameFor(Component.COMPRESSION_INFO), size);
         }
         catch (IOException e)
         {

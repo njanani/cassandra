@@ -387,8 +387,9 @@ public class SSTableWriter extends SSTable
 	            //Put request to Flecs - only the data file is added to Flecs           
 	            FleCSClient fcsclient = new FleCSClient();
 	            fcsclient.init();
-	            byte[] filecontent = readFileToByteArray(filename);	    	            
-	            int status = fcsclient.Put(flecsContainers.get(CassandraServer.cf_privacy.get(newdesc.cfname)), filename, filecontent);
+	            byte[] filecontent = readFileToByteArray(filename);	  
+	            CFMetaData cfm = Schema.instance.getCFMetaData(newdesc.ksname,newdesc.cfname);
+	            int status = fcsclient.Put(flecsContainers.get(cfm.getPrivacy()), filename, filecontent);
 	            fcsclient.cleanup();
 	            /*
 	            File todelete = new File(filename);
