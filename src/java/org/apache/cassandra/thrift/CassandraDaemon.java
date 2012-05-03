@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.NamedThreadFactory;
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.io.sstable.SSTable;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.transport.TFramedTransport;
@@ -71,6 +72,7 @@ public class CassandraDaemon extends org.apache.cassandra.service.AbstractCassan
     {
         if (server == null)
         {
+        	SSTable.initFlecs();
             server = new ThriftServer(listenAddr, listenPort);
             server.start();
         }

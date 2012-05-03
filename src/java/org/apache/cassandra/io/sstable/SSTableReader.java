@@ -45,10 +45,12 @@ import org.apache.cassandra.dht.AbstractBounds;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.io.compress.CompressionMetadata;
 import org.apache.cassandra.io.util.*;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.*;
+import org.apache.cassandra.flecs.*;
 
 /**
  * SSTableReaders are open()ed by Table.onStart; after that they are created by SSTableWriter.renameAndOpen.
@@ -149,7 +151,20 @@ public class SSTableReader extends SSTable
         assert components.contains(Component.PRIMARY_INDEX);
 
         long start = System.currentTimeMillis();
-        logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
+        
+        //logger.info("check {} container ({} filename )", flecsContainers.get(metadata.getPrivacy()),descriptor.filenameFor(COMPONENT_DATA));
+        
+        if(!descriptor.filenameFor(COMPONENT_DATA).contains("/system/")) {
+	        //Get request to Flecs - only the data file is added to Flecs           
+	        FleCSClient fcsclient = new FleCSClient();
+	        fcsclient.init();
+	        long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), descriptor.filenameFor(COMPONENT_DATA));
+	        fcsclient.cleanup();
+	        if(size != -1)
+	        	logger.info("Opening {} ({} bytes)", descriptor, size);
+        }
+        else
+        	logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
 
         SSTableMetadata sstableMetadata = components.contains(Component.STATS)
                                         ? SSTableMetadata.serializer.deserialize(descriptor)

@@ -1162,7 +1162,6 @@ public final class CFMetaData
     {
         try
         {
-        	System.out.println("result : " + result);
             CFMetaData cfm = new CFMetaData(result.getString("keyspace"),
                                             result.getString("columnfamily"),
                                             ColumnFamilyType.valueOf(result.getString("type")),

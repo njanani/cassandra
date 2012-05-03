@@ -39,6 +39,8 @@ import org.apache.cassandra.io.util.*;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.*;
 import org.apache.cassandra.flecs.*;
+import org.apache.cassandra.thrift.Cassandra;
+import org.apache.cassandra.thrift.CassandraServer;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.KsDef;
 
@@ -52,6 +54,10 @@ public class SSTableWriter extends SSTable
     private DecoratedKey lastWrittenKey;
     private FileMark dataMark;
     private final SSTableMetadata.Collector sstableMetadataCollector;
+    
+    public int test;
+    
+    
 
     public SSTableWriter(String filename, long keyCount) throws IOException
     {
@@ -62,7 +68,7 @@ public class SSTableWriter extends SSTable
              SSTableMetadata.createCollector());
     }
 
-    private static Set<Component> components(CFMetaData metadata)
+    private static Set<Component> components(CFMetaData metadata)throws IOException
     {
         Set<Component> components = new HashSet<Component>(Arrays.asList(Component.DATA,
                                                                          Component.FILTER,
@@ -325,7 +331,7 @@ public class SSTableWriter extends SSTable
             return;
 
         SequentialWriter out = SequentialWriter.open(new File(descriptor.filenameFor(SSTable.COMPONENT_DIGEST)), true);
-        // Writting output compatible with sha1sum
+        // Writing output compatible with sha1sum
         Descriptor newdesc = descriptor.asTemporary(false);
         String[] tmp = newdesc.filenameFor(SSTable.COMPONENT_DATA).split(Pattern.quote(File.separator));
         String dataFileName = tmp[tmp.length - 1];
@@ -374,24 +380,34 @@ public class SSTableWriter extends SSTable
             // don't rename -Summary component as it is not created yet and created when SSTable is loaded.
             for (Component component : Sets.difference(components, Sets.newHashSet(Component.DATA, Component.SUMMARY)))
                 FBUtilities.renameWithConfirm(tmpdesc.filenameFor(component), newdesc.filenameFor(component));
-            FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
-
-				String filename = newdesc.filenameFor(Component.DATA);
-            if (!filename.contains("/system/")) {
+            //FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
+            
+			String filename = newdesc.filenameFor(Component.DATA);
+            if (!filename.contains("/system/")) {        
 	            //Put request to Flecs - only the data file is added to Flecs           
 	            FleCSClient fcsclient = new FleCSClient();
 	            fcsclient.init();
-	            byte[] filecontent = readFileToByteArray(newdesc.filenameFor(Component.DATA));
-	            KsDef newksDef = new KsDef();
-	            CfDef newcfDef =  getCfDef(newksDef,newdesc.cfname);
-	            System.out.println("Data privacy : " + newcfDef.getPrivacy());
-	            int success = fcsclient.Put(flecsContainers.get(newcfDef.getPrivacy()), newdesc.filenameFor(Component.DATA),filecontent);
-	            System.out.println("Put data file to flecs: " + success);
+	            byte[] filecontent = readFileToByteArray(filename);	    	            
+	            int status = fcsclient.Put(flecsContainers.get(CassandraServer.cf_privacy.get(newdesc.cfname)), filename, filecontent);
 	            fcsclient.cleanup();
+	            /*
+	            File todelete = new File(filename);
+	            if (!todelete.delete())
+	            {
+	                throw new IOException("Failed to delete " + todelete.getAbsolutePath());
+	            }
+	            */
+	            if (status == 1)
+	            {
+	                logger.error("Put failed " + newdesc.filenameFor(Component.DATA));	                
+	                throw new IOException();
+	            }
             }
-            else {
-            	//FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
+            else 
+            {
+            	FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
             }
+
         }
         catch (IOException e)
         {

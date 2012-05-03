@@ -29,8 +29,11 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.DataTracker;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.service.StorageService;
+import org.apache.cassandra.thrift.CassandraServer;
 import org.apache.cassandra.utils.WrappedRunnable;
 
 public class SSTableDeletingTask extends WrappedRunnable
@@ -66,15 +69,32 @@ public class SSTableDeletingTask extends WrappedRunnable
     }
 
     protected void runMayThrow() throws IOException
-    {
+    {    
+    	int status = 1;
         // If we can't successfully delete the DATA component, set the task to be retried later: see above
-        File datafile = new File(desc.filenameFor(Component.DATA));
-        if (!datafile.delete())
-        {
-            logger.error("Unable to delete " + datafile + " (it will be removed on server restart; we'll also retry after GC)");
-            failedTasks.add(this);
-            return;
-        }
+    	if (desc.filenameFor(Component.DATA).contains("/system/")) {
+    		File datafile = new File(desc.filenameFor(Component.DATA));
+    		if (!datafile.delete())
+            {
+                logger.error("Unable to delete " + desc.filenameFor(Component.DATA) + " (it will be removed on server restart; we'll also retry after GC)");
+                failedTasks.add(this);
+                return;
+            }
+    	}
+    	else {
+	    	//Delete request to Flecs - only the data file is added to Flecs           
+	        FleCSClient fcsclient = new FleCSClient();
+	        fcsclient.init();
+	        status = fcsclient.Delete(SSTable.flecsContainers.get(CassandraServer.cf_privacy.get(desc.cfname)), desc.filenameFor(Component.DATA));
+	        fcsclient.cleanup();
+	        if (status == 1)
+	        {
+	            logger.error("Unable to delete " + desc.filenameFor(Component.DATA) + " (it will be removed on server restart; we'll also retry after GC)");
+	            failedTasks.add(this);
+	            return;
+	        }
+    	}
+        
         // let the remainder be cleaned up by delete
         SSTable.delete(desc, Sets.difference(components, Collections.singleton(Component.DATA)));
         if (tracker != null)

@@ -58,7 +58,8 @@ public class CassandraServer implements Cassandra.Iface
     private final static List<ColumnOrSuperColumn> EMPTY_COLUMNS = Collections.emptyList();
     private final static List<Column> EMPTY_SUBCOLUMNS = Collections.emptyList();
     private final static List<CounterColumn> EMPTY_COUNTER_SUBCOLUMNS = Collections.emptyList();
-
+    public static Map<String,Integer> cf_privacy ;
+    
     // thread local state containing session information
     public final ThreadLocal<ClientState> clientState = new ThreadLocal<ClientState>()
     {
@@ -921,6 +922,7 @@ public class CassandraServer implements Cassandra.Iface
         {
             cf_def.unsetId(); // explicitly ignore any id set by client (Hector likes to set zero)
             CFMetaData cfm = CFMetaData.fromThrift(cf_def);
+            cf_privacy.put(cf_def.name, cf_def.privacy);
             cfm.addDefaultIndexNames();
             MigrationManager.announceNewColumnFamily(cfm);
             return Schema.instance.getVersion().toString();
@@ -945,6 +947,7 @@ public class CassandraServer implements Cassandra.Iface
         try
         {
             MigrationManager.announceColumnFamilyDrop(cState.getKeyspace(), column_family);
+            cf_privacy.remove(column_family);
             return Schema.instance.getVersion().toString();
         }
         catch (ConfigurationException e)
@@ -1060,6 +1063,7 @@ public class CassandraServer implements Cassandra.Iface
             CFMetaData cfm = CFMetaData.fromThrift(cf_def);
             cfm.addDefaultIndexNames();
             MigrationManager.announceColumnFamilyUpdate(cfm);
+            cf_privacy.put(cf_def.name, cf_def.privacy);
             return Schema.instance.getVersion().toString();
         }
         catch (ConfigurationException e)

@@ -1275,7 +1275,7 @@ public class CliClient
             case CACHING:
                 cfDef.setCaching(CliUtils.unescapeSQLString(mValue));
                 break;
-				case PRIVACY:
+			case PRIVACY:
             	 cfDef.setPrivacy(Integer.parseInt(mValue));
             	 break;
             default:

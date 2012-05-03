@@ -20,6 +20,7 @@ package org.apache.cassandra.io.util;
 import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
+import java.io.*;
 
 public class BufferedSegmentedFile extends SegmentedFile
 {

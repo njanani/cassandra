@@ -31,11 +31,14 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.RowIndexEntry;
 import org.apache.cassandra.dht.IPartitioner;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.io.util.RandomAccessReader;
+import org.apache.cassandra.thrift.CassandraServer;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.HeapAllocator;
 import org.apache.cassandra.utils.Pair;
+import org.apache.cassandra.flecs.FleCSClient;
 
 /**
  * This class is built on top of the SequenceFile. It stores
@@ -106,9 +109,8 @@ public abstract class SSTable
         this.compression = dataComponents.contains(Component.COMPRESSION_INFO);
         this.components = Collections.unmodifiableSet(dataComponents);
         this.metadata = metadata;
-        this.partitioner = partitioner;
-        flecsContainers.put(1,"rep-partial");
-        flecsContainers.put(2,"rep-strong-const");        
+        this.partitioner = partitioner;   
+        initFlecs();
     }
 
     public static final Comparator<SSTableReader> sstableComparator = new Comparator<SSTableReader>()
@@ -118,6 +120,12 @@ public abstract class SSTable
             return o1.first.compareTo(o2.first);
         }
     };
+    
+    public static final void initFlecs()
+    {
+        flecsContainers.put(1,"rep-no-const");
+        flecsContainers.put(2,"rep-strong-const"); 
+    }
 
     public static final Ordering<SSTableReader> sstableOrdering = Ordering.from(sstableComparator);
 
@@ -135,8 +143,23 @@ public abstract class SSTable
     public static boolean delete(Descriptor desc, Set<Component> components) throws IOException
     {
         // remove the DATA component first if it exists
-        if (components.contains(Component.DATA))
-            FileUtils.deleteWithConfirm(desc.filenameFor(Component.DATA));
+        if (components.contains(Component.DATA)) {
+        	if (desc.filenameFor(Component.DATA).contains("/system/")) {
+        	    FileUtils.deleteWithConfirm(desc.filenameFor(Component.DATA));
+        	}
+        	else {
+    	    	//Delete request to Flecs - only the data file is added to Flecs           
+    	        FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();
+    	        int status = fcsclient.Delete(SSTable.flecsContainers.get(CassandraServer.cf_privacy.get(desc.cfname)), desc.filenameFor(Component.DATA));
+    	        fcsclient.cleanup();
+    	        if (status == 1)
+    	        {
+    	            logger.error("Unable to delete " + desc.filenameFor(Component.DATA) + " (it will be removed on server restart; we'll also retry after GC)");
+    	            throw new IOException();
+    	        }
+        	}
+        }
         for (Component component : components)
         {
             if (component.equals(Component.DATA) || component.equals(Component.COMPACTED_MARKER) || component.equals(Component.SUMMARY))
@@ -250,7 +273,22 @@ public abstract class SSTable
         long bytes = 0;
         for (Component component : components)
         {
-            bytes += new File(descriptor.filenameFor(component)).length();
+        	if(component == Component.DATA) {
+        		if(!descriptor.filenameFor(COMPONENT_DATA).contains("/system/")) {
+	        		//Get request to Flecs - only the data file is added to Flecs           
+	                FleCSClient fcsclient = new FleCSClient();
+	                fcsclient.init();
+	                long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), descriptor.filenameFor(COMPONENT_DATA));
+	                fcsclient.cleanup();
+	                if (size!=-1)
+	                bytes += size;
+        		}
+        		else
+        			bytes += new File(descriptor.filenameFor(component)).length();
+        	}
+        	else {
+        		bytes += new File(descriptor.filenameFor(component)).length();
+        	}   
         }
         return bytes;
     }
