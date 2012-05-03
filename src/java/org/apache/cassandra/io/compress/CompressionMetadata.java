@@ -87,8 +87,26 @@ public class CompressionMetadata
     CompressionMetadata(String indexFilePath, long compressedLength) throws IOException
     {
         this.indexFilePath = indexFilePath;
-
-        DataInputStream stream = new DataInputStream(new FileInputStream(indexFilePath));
+        DataInputStream stream;
+        String[] indexFileName = indexFilePath.split("/");
+        String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
+        String ksname = indexFile[0];
+        String cfname = indexFile[1];
+              
+        if(!indexFilePath.contains("/system/") && indexFilePath.endsWith("-Data.db")) {
+	        //Get request to Flecs - only the data file is added to Flecs           
+	        FleCSClient fcsclient = new FleCSClient();
+	        fcsclient.init();
+	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
+	        byte[] filecontent = fcsclient.Get(SSTable.flecsContainers.get(cfm.getPrivacy()),indexFilePath);
+	        fcsclient.cleanup();
+	        stream = new DataInputStream(new ByteArrayInputStream(filecontent));
+        }
+        else
+        {
+        	stream = new DataInputStream(new FileInputStream(indexFilePath));
+        }
+        
 
         String compressorName = stream.readUTF();
         int optionCount = stream.readInt();

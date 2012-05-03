@@ -913,6 +913,7 @@ public class SSTableReader extends SSTable
 
     public FileDataInput getFileDataInput(long position)
     {
+    	System.out.println("read " + dfile.path);
         return dfile.getSegment(position);
     }
 

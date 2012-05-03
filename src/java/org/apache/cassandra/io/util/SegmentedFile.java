@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOError;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -121,7 +122,7 @@ public abstract class SegmentedFile
                 throw new IOException("Cannot deserialize SSTable Summary component because the DiskAccessMode was changed!");
         }
     }
-
+/*
     static final class Segment extends Pair<Long, MappedByteBuffer> implements Comparable<Segment>
     {
         public Segment(long offset, MappedByteBuffer segment)
@@ -134,7 +135,19 @@ public abstract class SegmentedFile
             return (int)Math.signum(this.left - that.left);
         }
     }
+*/
+    static final class Segment extends Pair<Long, ByteBuffer> implements Comparable<Segment>
+    {
+        public Segment(long offset, ByteBuffer segment)
+        {
+            super(offset, segment);
+        }
 
+        public final int compareTo(Segment that)
+        {
+            return (int)Math.signum(this.left - that.left);
+        }
+    }
     /**
      * A lazy Iterator over segments in forward order from the given position.
      */

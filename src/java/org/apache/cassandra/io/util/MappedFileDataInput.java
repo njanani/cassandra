@@ -26,7 +26,8 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 
 public class MappedFileDataInput extends AbstractDataInput implements FileDataInput
 {
-    private final MappedByteBuffer buffer;
+    //private final MappedByteBuffer buffer;
+	private final ByteBuffer buffer;
     private final String filename;
     private final long segmentOffset;
     private int position;
@@ -49,6 +50,14 @@ public class MappedFileDataInput extends AbstractDataInput implements FileDataIn
         this.position = position;
     }
 
+    public MappedFileDataInput(ByteBuffer buffer, String filename, long segmentOffset, int position)
+    {
+        assert buffer != null;
+        this.buffer = buffer;
+        this.filename = filename;
+        this.segmentOffset = segmentOffset;
+        this.position = position;
+    }
     // don't make this public, this is only for seeking WITHIN the current mapped segment
     protected void seekInternal(int pos)
     {

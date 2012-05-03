@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -30,6 +32,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.Schema;
+import org.apache.cassandra.io.sstable.SSTable;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,7 +199,23 @@ public class MmappedSegmentedFile extends SegmentedFile
 
         public SegmentedFile complete(String path)
         {
-            long length = new File(path).length();
+            long length;
+            if(!path.contains("/system/") && path.endsWith("-Data.db")) {
+            	String[] indexFileName = path.split("/");
+                String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
+                String ksname = indexFile[0];
+                String cfname = indexFile[1];
+    	        //Get request to Flecs - only the data file is added to Flecs           
+    	        FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();
+    	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
+    	        length = fcsclient.Size(SSTable.flecsContainers.get(cfm.getPrivacy()), path);
+    	        fcsclient.cleanup();    	        
+            }
+            else 
+            {
+            	length = new File(path).length();
+            }
             // add a sentinel value == length
             if (length != boundaries.get(boundaries.size() - 1))
                 boundaries.add(length);
@@ -206,16 +228,47 @@ public class MmappedSegmentedFile extends SegmentedFile
             int segcount = boundaries.size() - 1;
             Segment[] segments = new Segment[segcount];
             RandomAccessFile raf = null;
+            ByteArrayInputStream bais = null;
+            //MappedByteBuffer segment = null;
+            ByteBuffer segment = null;
+            ByteBuffer bb = null;
+            byte[] filecontent = null;
             try
             {
-                raf = new RandomAccessFile(path, "r");
+            	if(!path.contains("/system/") && path.endsWith("-Data.db")) {
+            		String[] indexFileName = path.split("/");
+                    String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
+                    String ksname = indexFile[0];
+                    String cfname = indexFile[1];
+            		//Get request to Flecs - only the data file is added to Flecs           
+        	        FleCSClient fcsclient = new FleCSClient();
+        	        fcsclient.init();
+        	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
+        	        filecontent = fcsclient.Get(SSTable.flecsContainers.get(cfm.getPrivacy()), path);
+        	        //bais = new ByteArrayInputStream(filecontent);
+        	        bb.wrap(filecontent);
+        	        fcsclient.cleanup(); 
+            	}
+            	else
+            	{
+            		raf = new RandomAccessFile(path, "r");
+            	}
                 for (int i = 0; i < segcount; i++)
-                {
+                {                	
                     long start = boundaries.get(i);
                     long size = boundaries.get(i + 1) - start;
-                    MappedByteBuffer segment = size <= MAX_SEGMENT_SIZE
-                                               ? raf.getChannel().map(FileChannel.MapMode.READ_ONLY, start, size)
-                                               : null;
+                    int a,b;
+                    if(!path.contains("/system/") && path.endsWith("-Data.db")) {
+                    	segment = size <= MAX_SEGMENT_SIZE
+                                ? bb.get(filecontent,(int)start,(int)size)
+                                : null;                                
+                    }
+                    else 
+                    {
+                    	 segment = size <= MAX_SEGMENT_SIZE
+                                 ? raf.getChannel().map(FileChannel.MapMode.READ_ONLY, start, size)
+                                 : null;                                 
+                    }                                
                     segments[i] = new Segment(start, segment);
                 }
             }
