@@ -114,6 +114,13 @@ public abstract class SSTable
         initFlecs();
     }
 
+    public static String modifyFilePath(String path)
+    {
+    	if(path.startsWith("/"))
+    		return path.substring(1,path.length());
+    	return path;
+    	
+    }
     public static final Comparator<SSTableReader> sstableComparator = new Comparator<SSTableReader>()
     {
         public int compare(SSTableReader o1, SSTableReader o2)
@@ -153,7 +160,7 @@ public abstract class SSTable
     	        FleCSClient fcsclient = new FleCSClient();
     	        fcsclient.init();
     	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
-    	        int status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), desc.filenameFor(Component.DATA));
+    	        int status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), modifyFilePath(desc.filenameFor(Component.DATA)));
     	        fcsclient.cleanup();
     	        if (status == 1)
     	        {
@@ -280,7 +287,7 @@ public abstract class SSTable
 	        		//Get request to Flecs - only the data file is added to Flecs           
 	                FleCSClient fcsclient = new FleCSClient();
 	                fcsclient.init();
-	                long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), descriptor.filenameFor(COMPONENT_DATA));
+	                long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), modifyFilePath(descriptor.filenameFor(COMPONENT_DATA)));
 	                fcsclient.cleanup();
 	                if (size!=-1)
 	                bytes += size;

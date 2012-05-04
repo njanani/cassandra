@@ -17,11 +17,21 @@
  */
 package org.apache.cassandra.io.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io. ObjectInputStream;
 import java.io.IOError;
 import java.io.IOException;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.io.compress.CompressedRandomAccessReader;
 import org.apache.cassandra.io.compress.CompressionMetadata;
+import org.apache.cassandra.io.sstable.SSTable;
 
 public class CompressedSegmentedFile extends SegmentedFile
 {
@@ -57,10 +67,27 @@ public class CompressedSegmentedFile extends SegmentedFile
 
     public FileDataInput getSegment(long position)
     {
+    	RandomAccessReader file = null;
         try
         {
-            RandomAccessReader file = CompressedRandomAccessReader.open(path, metadata);
-            file.seek(position);
+        	if(!path.contains("/system/")) {
+        		FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();
+    	        byte [] b = fcsclient.Get(SSTable.flecsContainers.get(MmappedSegmentedFile.getcfmData(path)), SSTable.modifyFilePath(path));
+    	        fcsclient.cleanup();
+    	        FileOutputStream fos = new FileOutputStream(new File(path));
+    	        BufferedOutputStream bos = new BufferedOutputStream(fos);
+    	        bos.write(b);
+    	        bos.flush();
+    	        bos.close();
+    	        file = CompressedRandomAccessReader.open(path, metadata);        		                	
+	            file.seek(position);	
+        	}
+        	else
+        	{
+	            file = CompressedRandomAccessReader.open(path, metadata);        		                	
+	            file.seek(position);	           
+        	}
             return file;
         }
         catch (IOException e)

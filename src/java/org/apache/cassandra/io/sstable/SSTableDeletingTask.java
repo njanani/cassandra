@@ -87,7 +87,7 @@ public class SSTableDeletingTask extends WrappedRunnable
 	        FleCSClient fcsclient = new FleCSClient();
 	        fcsclient.init();
 	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
-	        status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), desc.filenameFor(Component.DATA));
+	        status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), SSTable.modifyFilePath(desc.filenameFor(Component.DATA)));
 	        fcsclient.cleanup();
 	        if (status == 1)
 	        {

@@ -91,7 +91,7 @@ public class SSTableLoader
                 components.add(Component.PRIMARY_INDEX);
                 if (new File(desc.filenameFor(Component.COMPRESSION_INFO)).exists())
                     components.add(Component.COMPRESSION_INFO);
-
+System.out.println(components);
                 try
                 {
                     sstables.add(SSTableReader.open(desc, components, null, client.getPartitioner()));

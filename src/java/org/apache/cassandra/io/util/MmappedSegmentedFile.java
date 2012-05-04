@@ -17,13 +17,16 @@
  */
 package org.apache.cassandra.io.util;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
@@ -61,6 +64,15 @@ public class MmappedSegmentedFile extends SegmentedFile
         this.segments = segments;
     }
 
+    public static int getcfmData(String path) {
+    	String[] indexFileName = path.split("/");
+        String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
+        String ksname = indexFile[0];
+        String cfname = indexFile[1];
+        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
+        return cfm.getPrivacy();           
+    }
+    
     /**
      * @return The segment entry for the given position.
      */
@@ -82,6 +94,7 @@ public class MmappedSegmentedFile extends SegmentedFile
     public FileDataInput getSegment(long position)
     {
         Segment segment = floor(position);
+        RandomAccessReader file = null;
         if (segment.right != null)
         {
             // segment is mmap'd
@@ -92,8 +105,24 @@ public class MmappedSegmentedFile extends SegmentedFile
         try
         {
             // FIXME: brafs are unbounded, so this segment will cover the rest of the file, rather than just the row
-            RandomAccessReader file = RandomAccessReader.open(new File(path));
-            file.seek(position);
+        	if(!path.contains("/system/")) {
+        		FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();
+    	        byte [] b = fcsclient.Get(SSTable.flecsContainers.get(getcfmData(path)), SSTable.modifyFilePath(path));
+    	        fcsclient.cleanup();
+    	        FileOutputStream fos = new FileOutputStream(new File(path));
+    	        BufferedOutputStream bos = new BufferedOutputStream(fos);
+    	        bos.write(b);
+    	        bos.flush();
+    	        bos.close();
+    	        file = RandomAccessReader.open(new File(path));
+                file.seek(position);
+        	}
+        	else
+        	{
+            	file = RandomAccessReader.open(new File(path));
+                file.seek(position);	                
+        	}
             return file;
         }
         catch (IOException e)
@@ -201,15 +230,10 @@ public class MmappedSegmentedFile extends SegmentedFile
         {
             long length;
             if(!path.contains("/system/") && path.endsWith("-Data.db")) {
-            	String[] indexFileName = path.split("/");
-                String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
-                String ksname = indexFile[0];
-                String cfname = indexFile[1];
     	        //Get request to Flecs - only the data file is added to Flecs           
     	        FleCSClient fcsclient = new FleCSClient();
-    	        fcsclient.init();
-    	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
-    	        length = fcsclient.Size(SSTable.flecsContainers.get(cfm.getPrivacy()), path);
+    	        fcsclient.init();    	        
+    	        length = fcsclient.Size(SSTable.flecsContainers.get(getcfmData(path)), SSTable.modifyFilePath(path));
     	        fcsclient.cleanup();    	        
             }
             else 
@@ -222,7 +246,7 @@ public class MmappedSegmentedFile extends SegmentedFile
             // create the segments
             return new MmappedSegmentedFile(path, length, createSegments(path));
         }
-
+        
         private Segment[] createSegments(String path)
         {
             int segcount = boundaries.size() - 1;
@@ -236,15 +260,11 @@ public class MmappedSegmentedFile extends SegmentedFile
             try
             {
             	if(!path.contains("/system/") && path.endsWith("-Data.db")) {
-            		String[] indexFileName = path.split("/");
-                    String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
-                    String ksname = indexFile[0];
-                    String cfname = indexFile[1];
+            		
             		//Get request to Flecs - only the data file is added to Flecs           
         	        FleCSClient fcsclient = new FleCSClient();
-        	        fcsclient.init();
-        	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
-        	        filecontent = fcsclient.Get(SSTable.flecsContainers.get(cfm.getPrivacy()), path);
+        	        fcsclient.init();        	        
+        	        filecontent = fcsclient.Get(SSTable.flecsContainers.get(getcfmData(path)), SSTable.modifyFilePath(path));
         	        //bais = new ByteArrayInputStream(filecontent);
         	        bb.wrap(filecontent);
         	        fcsclient.cleanup(); 

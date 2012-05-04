@@ -79,7 +79,7 @@ public class RandomAccessReader extends RandomAccessFile implements FileDataInpu
         // we can cache file length in read-only mode
         fileLength = channel.size();
         validBufferBytes = -1; // that will trigger reBuffer() on demand by read/seek operations
-    }
+    }   
 
     public static RandomAccessReader open(File file, boolean skipIOCache) throws IOException
     {

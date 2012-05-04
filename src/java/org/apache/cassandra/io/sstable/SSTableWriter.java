@@ -380,7 +380,7 @@ public class SSTableWriter extends SSTable
             // don't rename -Summary component as it is not created yet and created when SSTable is loaded.
             for (Component component : Sets.difference(components, Sets.newHashSet(Component.DATA, Component.SUMMARY)))
                 FBUtilities.renameWithConfirm(tmpdesc.filenameFor(component), newdesc.filenameFor(component));
-            //FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
+            FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
             
 			String filename = newdesc.filenameFor(Component.DATA);
             if (!filename.contains("/system/")) {        
@@ -391,24 +391,20 @@ public class SSTableWriter extends SSTable
 	            CFMetaData cfm = Schema.instance.getCFMetaData(newdesc.ksname,newdesc.cfname);
 	            int status = fcsclient.Put(flecsContainers.get(cfm.getPrivacy()), filename, filecontent);
 	            fcsclient.cleanup();
-	            /*
+	            
 	            File todelete = new File(filename);
 	            if (!todelete.delete())
 	            {
 	                throw new IOException("Failed to delete " + todelete.getAbsolutePath());
 	            }
-	            */
+	            
 	            if (status == 1)
 	            {
 	                logger.error("Put failed " + newdesc.filenameFor(Component.DATA));	                
 	                throw new IOException();
 	            }
             }
-            else 
-            {
-            	FBUtilities.renameWithConfirm(tmpdesc.filenameFor(Component.DATA), newdesc.filenameFor(Component.DATA));
-            }
-
+ 
         }
         catch (IOException e)
         {

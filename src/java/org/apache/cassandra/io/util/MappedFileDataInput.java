@@ -58,6 +58,7 @@ public class MappedFileDataInput extends AbstractDataInput implements FileDataIn
         this.segmentOffset = segmentOffset;
         this.position = position;
     }
+    
     // don't make this public, this is only for seeking WITHIN the current mapped segment
     protected void seekInternal(int pos)
     {

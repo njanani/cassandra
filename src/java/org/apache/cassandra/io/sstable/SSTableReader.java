@@ -145,9 +145,11 @@ public class SSTableReader extends SSTable
 
     public static SSTableReader open(Descriptor descriptor, Set<Component> components, Set<DecoratedKey> savedKeys, DataTracker tracker, CFMetaData metadata, IPartitioner partitioner) throws IOException
     {
+  //  	System.out.println("components of " + descriptor.filenameFor(COMPONENT_INDEX));
+    //	System.out.println(components);
         assert partitioner != null;
         // Minimum components without which we can't do anything
-        assert components.contains(Component.DATA);
+        //assert components.contains(Component.DATA);
         assert components.contains(Component.PRIMARY_INDEX);
 
         long start = System.currentTimeMillis();
@@ -158,10 +160,10 @@ public class SSTableReader extends SSTable
 	        //Get request to Flecs - only the data file is added to Flecs           
 	        FleCSClient fcsclient = new FleCSClient();
 	        fcsclient.init();
-	        long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), descriptor.filenameFor(COMPONENT_DATA));
+	        long size = fcsclient.Size(flecsContainers.get(metadata.getPrivacy()), modifyFilePath(descriptor.filenameFor(COMPONENT_DATA)));
 	        fcsclient.cleanup();
 	        if(size != -1)
-	        	logger.info("Opening {} ({} bytes)", descriptor, size);
+	        	logger.info("Opening from flecs {} ({} bytes)", descriptor, size);
         }
         else
         	logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
@@ -913,7 +915,7 @@ public class SSTableReader extends SSTable
 
     public FileDataInput getFileDataInput(long position)
     {
-    	System.out.println("read " + dfile.path);
+    	//System.out.println("read " + dfile.path);
         return dfile.getSegment(position);
     }
 

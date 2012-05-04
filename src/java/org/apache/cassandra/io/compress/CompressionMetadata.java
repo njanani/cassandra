@@ -28,6 +28,7 @@ import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.sstable.SSTable;
 import org.apache.cassandra.thrift.CassandraServer;
 import org.apache.cassandra.io.util.FileUtils;
+import org.apache.cassandra.io.util.MmappedSegmentedFile;
 import org.apache.cassandra.utils.BigLongArray;
 import org.apache.cassandra.config.Schema;
 import org.apache.cassandra.config.CFMetaData;
@@ -66,7 +67,7 @@ public class CompressionMetadata
     	        FleCSClient fcsclient = new FleCSClient();
     	        fcsclient.init();
     	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
-    	        size = fcsclient.Size(SSTable.flecsContainers.get(cfm.getPrivacy()),dataFilePath);
+    	        size = fcsclient.Size(SSTable.flecsContainers.get(cfm.getPrivacy()),SSTable.modifyFilePath(dataFilePath));
     	        fcsclient.cleanup();
     	        if(size == -1)
     	        	throw new IOException();    	        	
@@ -88,17 +89,12 @@ public class CompressionMetadata
     {
         this.indexFilePath = indexFilePath;
         DataInputStream stream;
-        String[] indexFileName = indexFilePath.split("/");
-        String[] indexFile = indexFileName[indexFileName.length - 1].split("-");
-        String ksname = indexFile[0];
-        String cfname = indexFile[1];
-              
+
         if(!indexFilePath.contains("/system/") && indexFilePath.endsWith("-Data.db")) {
 	        //Get request to Flecs - only the data file is added to Flecs           
 	        FleCSClient fcsclient = new FleCSClient();
-	        fcsclient.init();
-	        CFMetaData cfm = Schema.instance.getCFMetaData(ksname,cfname);
-	        byte[] filecontent = fcsclient.Get(SSTable.flecsContainers.get(cfm.getPrivacy()),indexFilePath);
+	        fcsclient.init();	        
+	        byte[] filecontent = fcsclient.Get(SSTable.flecsContainers.get(MmappedSegmentedFile.getcfmData(indexFilePath)),SSTable.modifyFilePath(indexFilePath));
 	        fcsclient.cleanup();
 	        stream = new DataInputStream(new ByteArrayInputStream(filecontent));
         }

@@ -56,10 +56,12 @@ import org.apache.cassandra.db.index.SecondaryIndex;
 import org.apache.cassandra.db.index.SecondaryIndexManager;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.dht.*;
+import org.apache.cassandra.flecs.FleCSClient;
 import org.apache.cassandra.io.compress.CompressionParameters;
 import org.apache.cassandra.io.sstable.*;
 import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.util.FileUtils;
+import org.apache.cassandra.io.util.MmappedSegmentedFile;
 import org.apache.cassandra.service.CacheService;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.thrift.IndexExpression;
@@ -355,19 +357,47 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 }
                 continue;
             }
-
-            File dataFile = new File(desc.filenameFor(Component.DATA));
-            if (components.contains(Component.DATA) && dataFile.length() > 0)
-                // everything appears to be in order... moving on.
-                continue;
-
+            
+            if (components.contains(Component.DATA) && desc.filenameFor(Component.DATA).contains("/system/")) {
+            	File dataFile = new File(desc.filenameFor(Component.DATA));
+            	if (dataFile.length() > 0)
+                    // everything appears to be in order... moving on.
+                    continue;
+            }
+            else if (!desc.filenameFor(Component.DATA).contains("/system/")) {
+            	//Get request to Flecs - only the data file is added to Flecs           
+    	        FleCSClient fcsclient = new FleCSClient();
+    	        fcsclient.init();    	        
+    	        long length = fcsclient.Size(SSTable.flecsContainers.get(MmappedSegmentedFile.getcfmData(desc.filenameFor(Component.DATA))), SSTable.modifyFilePath(desc.filenameFor(Component.DATA)));
+    	        fcsclient.cleanup(); 
+    	        if (length > 0)
+                    // everything appears to be in order... moving on.
+                    continue;
+            }
+            
             // missing the DATA file! all components are orphaned
             logger.warn("Removing orphans for {}: {}", desc, components);
             for (Component component : components)
             {
+            	System.out.println(Component.DATA + " " + component);
                 try
                 {
-                    FileUtils.deleteWithConfirm(desc.filenameFor(component));
+                	if(component == Component.DATA) {
+                		//Delete request to Flecs - only the data file is added to Flecs           
+            	        FleCSClient fcsclient = new FleCSClient();
+            	        fcsclient.init();
+            	        CFMetaData cfm = Schema.instance.getCFMetaData(desc.ksname,desc.cfname);
+            	        int status = fcsclient.Delete(SSTable.flecsContainers.get(cfm.getPrivacy()), SSTable.modifyFilePath(desc.filenameFor(Component.DATA)));
+            	        fcsclient.cleanup();
+            	        if (status == 1)
+            	        {
+            	            logger.error("Unable to delete " + desc.filenameFor(Component.DATA) + " (it will be removed on server restart; we'll also retry after GC)");
+            	            throw new IOException();
+            	        }
+                	}
+                	else {
+                		FileUtils.deleteWithConfirm(desc.filenameFor(component));
+                	}
                 }
                 catch (IOException e)
                 {
